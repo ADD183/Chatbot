@@ -1,0 +1,461 @@
+{
+    "info": {
+        "name": "Multi-Tenant AI Chatbot API",
+        "description": "Complete API collection for testing the chatbot system",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "client_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "session_id",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{base_url}}/health",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "health"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "1. Create Client",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 201) {",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.collectionVariables.set('client_id', jsonData.id);",
+                            "    pm.environment.set('client_id', jsonData.id);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"Test Client {{$timestamp}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/clients",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "clients"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Create Business User",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"username\": \"business_user_{{$timestamp}}\",\n  \"email\": \"business_{{$timestamp}}@test.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"business\",\n  \"client_id\": {{client_id}}\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/users",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Create Regular User",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"username\": \"regular_user_{{$timestamp}}\",\n  \"email\": \"user_{{$timestamp}}@test.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"user\",\n  \"client_id\": {{client_id}}\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/users",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Login (Business User)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.collectionVariables.set('access_token', jsonData.access_token);",
+                            "    pm.environment.set('access_token', jsonData.access_token);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"username\": \"business_user\",\n  \"password\": \"SecurePass123!\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "5. Get Current User Info",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/me",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "me"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "6. Upload Document (PDF)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "/path/to/your/document.pdf"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/upload",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "upload"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "7. Upload Document (TXT)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "/path/to/your/document.txt"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/upload",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "upload"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "8. List Documents",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/files?skip=0&limit=50",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "files"
+                    ],
+                    "query": [
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "50"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "9. Chat (New Session)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    var jsonData = pm.response.json();",
+                            "    pm.collectionVariables.set('session_id', jsonData.session_id);",
+                            "    pm.environment.set('session_id', jsonData.session_id);",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"What are the key points in the uploaded documents?\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/chat",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "chat"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "10. Chat (Continue Session)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"message\": \"Can you elaborate on the first point?\",\n  \"session_id\": \"{{session_id}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/chat",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "chat"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "11. Get Chat History (All)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/chat/history?skip=0&limit=50",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "chat",
+                        "history"
+                    ],
+                    "query": [
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "50"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "12. Get Chat History (By Session)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/chat/history?session_id={{session_id}}&skip=0&limit=50",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "chat",
+                        "history"
+                    ],
+                    "query": [
+                        {
+                            "key": "session_id",
+                            "value": "{{session_id}}"
+                        },
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "50"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "RBAC Test - User Upload (Should Fail)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                    }
+                ],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": "/path/to/document.txt"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/upload",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "upload"
+                    ]
+                }
+            }
+        }
+    ]
+}

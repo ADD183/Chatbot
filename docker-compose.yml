@@ -1,0 +1,152 @@
+
+services:
+  # PostgreSQL with pgvector extension
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: chatbot_postgres
+    environment:
+      POSTGRES_DB: chatbot_db
+      POSTGRES_USER: chatbot_user
+      POSTGRES_PASSWORD: chatbot_pass
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U chatbot_user -d chatbot_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbot_network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: chatbot_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbot_network
+
+  # FastAPI application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot_api
+    env_file:
+      - ./.env
+    environment:
+      DATABASE_URL: postgresql://chatbot_user:chatbot_pass@postgres:5432/chatbot_db
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-this-in-production}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-False}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./.env:/app/.env
+      - ./main.py:/app/main.py
+      - ./auth.py:/app/auth.py
+      - ./models.py:/app/models.py
+      - ./schemas.py:/app/schemas.py
+      - ./database.py:/app/database.py
+      - ./gemini_service.py:/app/gemini_service.py
+      - ./worker.py:/app/worker.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+
+  # Celery worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot_worker
+    env_file:
+      - ./.env
+    command: celery -A worker.celery_app worker --loglevel=info --concurrency=1 --pool=solo
+    environment:
+      DATABASE_URL: postgresql://chatbot_user:chatbot_pass@postgres:5432/chatbot_db
+      REDIS_URL: redis://redis:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      EMBED_BATCH_SIZE: ${EMBED_BATCH_SIZE:-4}
+      CHUNK_SIZE: ${CHUNK_SIZE:-400}
+      CHUNK_OVERLAP: ${CHUNK_OVERLAP:-50}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./.env:/app/.env
+      - ./main.py:/app/main.py
+      - ./auth.py:/app/auth.py
+      - ./models.py:/app/models.py
+      - ./schemas.py:/app/schemas.py
+      - ./database.py:/app/database.py
+      - ./gemini_service.py:/app/gemini_service.py
+      - ./worker.py:/app/worker.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  # Celery beat (optional - for scheduled tasks)
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot_beat
+    env_file:
+      - ./.env
+    command: celery -A worker.celery_app beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://chatbot_user:chatbot_pass@postgres:5432/chatbot_db
+      REDIS_URL: redis://redis:6379/0
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - ./.env:/app/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+networks:
+  chatbot_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

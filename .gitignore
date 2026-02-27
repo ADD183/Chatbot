@@ -1,0 +1,81 @@
+/.venv/
+venv/
+env/
+\.env
+\.env.*
+node_modules/
+dist/
+frontend/dist/
+frontend/node_modules/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+*.pot
+*.mo
+*.cache
+uploads/
+token.json
+token_2.json
+*.pem
+.pytest_cache/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+build/
+coverage/
+.coverage
+/.venv/
+.mypy_cache/
+*.egg-info/
+dist/
+/.pytest_cache/# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Environment variables
+.env
+
+# Uploads directory
+uploads/*
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+*.log
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Distribution
+dist/
+build/
+*.egg-info/
