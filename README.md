@@ -66,6 +66,22 @@ GEMINI_API_KEY=your-actual-gemini-api-key-here
 SECRET_KEY=your-secure-secret-key-for-jwt
 ```
 
+Windows (PowerShell) example:
+
+```powershell
+copy .env.example .env
+$env:GEMINI_API_KEY = 'your-actual-gemini-api-key-here'
+$env:SECRET_KEY = 'your-secure-secret-key-for-jwt'
+```
+
+Windows (cmd.exe) example:
+
+```cmd
+copy .env.example .env
+set GEMINI_API_KEY=your-actual-gemini-api-key-here
+set SECRET_KEY=your-secure-secret-key-for-jwt
+```
+
 ### 3. Start the Services
 
 ```bash
@@ -293,6 +309,19 @@ async def chat(
 pip install -r requirements.txt
 ```
 
+### Frontend (React / Vite)
+
+Install and run the frontend dev server (from `frontend/`):
+
+```bash
+cd frontend
+npm install
+npm run dev      # starts Vite dev server (default: http://localhost:5173)
+npm run build    # build production bundle -> frontend/dist
+```
+
+If you prefer Docker for the frontend, build the frontend asset bundle locally then serve it with your preferred static host or include it in your API container.
+
 4. Set environment variables:
 
 ```bash
@@ -300,6 +329,15 @@ export DATABASE_URL=postgresql://user:pass@localhost:5432/chatbot_db
 export REDIS_URL=redis://localhost:6379/0
 export GEMINI_API_KEY=your-key
 export SECRET_KEY=your-secret
+```
+
+Windows (PowerShell) example:
+
+```powershell
+$env:DATABASE_URL = 'postgresql://user:pass@localhost:5432/chatbot_db'
+$env:REDIS_URL = 'redis://localhost:6379/0'
+$env:GEMINI_API_KEY = 'your-key'
+$env:SECRET_KEY = 'your-secret'
 ```
 
 5. Run migrations:
@@ -380,3 +418,15 @@ MIT License - feel free to use in your projects!
 ## Support
 
 For issues and questions, please open an issue on GitHub.
+
+## Pushing to GitHub
+
+If you haven't already pushed this repository to GitHub, a typical workflow is:
+
+```bash
+git remote add origin https://github.com/<your-user-or-org>/Chatbot.git
+git branch -M main
+git push -u origin main
+```
+
+Make sure to add any production secrets in the GitHub repository settings (Settings → Secrets → Actions).
